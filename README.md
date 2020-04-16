@@ -23,3 +23,5 @@ you to experiment with the code without having to shoot your own set of images.
 
 This project is Copyright 2015 Charles McGuinness, and is released under the
 Apache 2.0 license (see license file for precise details). 
+
+Refactored for Python3 by Douglas Goodwin, 4/20
