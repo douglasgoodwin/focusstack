@@ -6,6 +6,8 @@ Simple Focus Stacker
     Copyright:  Copyright 2015 Charles McGuinness
     License:    Apache License 2.0
 
+    Refactored by Doug Goodwin, 4/2020
+
 
 This code will take a series of images and merge them so that each
 pixel is taken from the image with the sharpest focus at that location.
@@ -36,6 +38,7 @@ http://stackoverflow.com/questions/15911783/what-are-some-common-focus-stacking-
 
 import numpy as np
 import cv2
+from matplotlib import pyplot as plt
 
 def findHomography(image_1_kp, image_2_kp, matches):
     image_1_points = np.zeros((len(matches), 1, 2), dtype=np.float32)
@@ -59,7 +62,7 @@ def align_images(images):
 
     #   SIFT generally produces better results, but it is not FOSS, so chose the feature detector
     #   that suits the needs of your project.  ORB does OK
-    use_sift = True
+    use_sift = False
 
     outimages = []
 
@@ -69,13 +72,13 @@ def align_images(images):
         detector = cv2.ORB_create(1000)
 
     #   We assume that image 0 is the "base" image and align everything to it
-    print "Detecting features of base image"
+    print("[INFO] Detecting features of base image")
     outimages.append(images[0])
     image1gray = cv2.cvtColor(images[0],cv2.COLOR_BGR2GRAY)
     image_1_kp, image_1_desc = detector.detectAndCompute(image1gray, None)
 
     for i in range(1,len(images)):
-        print "Aligning image {}".format(i)
+        print ("[INFO] Aligning image {}".format(i))
         image_i_kp, image_i_desc = detector.detectAndCompute(images[i], None)
 
         if use_sift:
@@ -109,11 +112,11 @@ def align_images(images):
 
 #
 #   Compute the gradient map of the image
-def doLap(image):
+def doLap(image,kernel_size=5,blur_size=5):
 
     # YOU SHOULD TUNE THESE VALUES TO SUIT YOUR NEEDS
-    kernel_size = 5         # Size of the laplacian window
-    blur_size = 5           # How big of a kernal to use for the gaussian blur
+#     kernel_size = 55         # Size of the laplacian window
+#     blur_size = 55           # How big of a kernal to use for the gaussian blur
                             # Generally, keeping these two values the same or very close works well
                             # Also, odd numbers, please...
 
@@ -123,17 +126,17 @@ def doLap(image):
 #
 #   This routine finds the points of best focus in all images and produces a merged result...
 #
-def focus_stack(unimages):
+def focus_stack(unimages,kernel_size=5,blur_size=5):
     images = align_images(unimages)
 
-    print "Computing the laplacian of the blurred images"
+    print ("[INFO] Computing the laplacian of the blurred images")
     laps = []
     for i in range(len(images)):
-        print "Lap {}".format(i)
-        laps.append(doLap(cv2.cvtColor(images[i],cv2.COLOR_BGR2GRAY)))
+        print ("[INFO] Lap {}".format(i))
+        laps.append(doLap(cv2.cvtColor(images[i],cv2.COLOR_BGR2GRAY), kernel_size,blur_size))
 
     laps = np.asarray(laps)
-    print "Shape of array of laplacians = {}".format(laps.shape)
+    print ("[INFO] Shape of array of laplacians = {}".format(laps.shape))
 
     output = np.zeros(shape=images[0].shape, dtype=images[0].dtype)
 
@@ -143,5 +146,32 @@ def focus_stack(unimages):
     mask = bool_mask.astype(np.uint8)
     for i in range(0,len(images)):
         output = cv2.bitwise_not(images[i],output, mask=mask[i])
-		
+
     return 255-output
+
+def show_images(images, cols = 1, titles = None):
+    """Display a list of images in a single figure with matplotlib.
+    
+    Parameters
+    ---------
+    images: List of np.arrays compatible with plt.imshow.
+    
+    cols (Default = 1): Number of columns in figure (number of rows is 
+                        set to np.ceil(n_images/float(cols))).
+    
+    titles: List of titles corresponding to each image. Must have
+            the same length as titles.
+    """
+    assert((titles is None)or (len(images) == len(titles)))
+    n_images = len(images)
+    if titles is None: titles = ['Image (%d)' % i for i in range(1,n_images + 1)]
+    fig = plt.figure()
+    for n, (image, title) in enumerate(zip(images, titles)):
+        a = fig.add_subplot(cols, np.ceil(n_images/float(cols)), n + 1)
+        if image.ndim == 2:
+            plt.gray()
+        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        a.set_title(title)
+    fig.set_size_inches(np.array(fig.get_size_inches()) * n_images)
+    plt.figure(figsize = (20,20))
+    plt.show()
