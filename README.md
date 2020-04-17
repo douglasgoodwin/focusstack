@@ -1,6 +1,6 @@
 # focusstack
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/douglasgoodwin/focusstack/master?filepath=https%3A%2F%2Fgithub.com%2Fdouglasgoodwin%2Ffocusstack%2Fblob%2Fmaster%2FfocusStack_test.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/douglasgoodwin/focusstack/master?urlpath=https%3A%2F%2Fgithub.com%2Fdouglasgoodwin%2Ffocusstack%2Fblob%2Fmaster%2FfocusStack_test.ipynb)
 
 Simple Focus Stacking in Python
 
